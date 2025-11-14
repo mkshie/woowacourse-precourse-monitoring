@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: open-mission
+  datasource:
+    url: jdbc:postgresql://localhost:5433/open_mission
+    username: postgres
+    password: 12345
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    default-schema: public
+    schemas: public
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus"
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.boot.context.config: DEBUG
+    org.springframework.core.env: DEBUG
