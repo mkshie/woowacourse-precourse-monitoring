@@ -1,12 +1,15 @@
 package org.monitoring.openmission.domain.order.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.monitoring.openmission.domain.item.dto.request.ItemCreateRequest;
 import org.monitoring.openmission.domain.item.dto.request.ItemUpdateRequest;
 import org.monitoring.openmission.domain.item.dto.response.ItemResponse;
 import org.monitoring.openmission.domain.item.entity.Item;
 import org.monitoring.openmission.domain.item.repository.ItemRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,5 +54,12 @@ public class ItemService {
     public ItemResponse getItem(Long id){
         Item item = itemRepository.getItemsById(id).orElseThrow(()-> new EntityNotFoundException("Item not found"));
         return ItemResponse.of(item);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ItemResponse> getAllItems(int page , int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        List<Item> items = itemRepository.findAll(pageable).getContent();
+        return items.stream().map(ItemResponse::of).toList();
     }
 }

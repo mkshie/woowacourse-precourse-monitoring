@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Item API", description = "물건 관리 API")
@@ -42,7 +43,7 @@ public class ItemController {
         return ResponseEntity.ok(itemService.updateItem(itemId, request));
     }
 
-    @Operation(summary = "아이템 조회", description = "조회할 item 의 id 를 입력해주세요")
+    @Operation(summary = "특정 아이템 조회", description = "조회할 item 의 id 를 입력해주세요")
     @GetMapping("/{id}")
     public ResponseEntity<ItemResponse> getItem(
             @PathVariable(name = "id") Long itemId
@@ -50,5 +51,13 @@ public class ItemController {
         return ResponseEntity.ok(itemService.getItem(itemId));
     }
 
+    @Operation(summary = "아이템 목록 조회")
+    @GetMapping
+    public ResponseEntity<List<ItemResponse>> getAllItems(
+            @RequestParam(name = "page" , defaultValue = "0") Integer page,
+            @RequestParam(name = "size" , defaultValue = "4") Integer size
+    ) {
+        return ResponseEntity.ok(itemService.getAllItems(page, size));
+    }
 
 }
