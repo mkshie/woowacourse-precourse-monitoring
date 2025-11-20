@@ -1,4 +1,4 @@
-package org.monitoring.openmission.domain.order.service;
+package org.monitoring.openmission.domain.item.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;

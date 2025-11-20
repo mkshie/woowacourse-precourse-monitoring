@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.monitoring.openmission.domain.item.dto.request.ItemCreateRequest;
 import org.monitoring.openmission.domain.item.dto.request.ItemUpdateRequest;
 import org.monitoring.openmission.domain.item.dto.response.ItemResponse;
-import org.monitoring.openmission.domain.order.service.ItemService;
+import org.monitoring.openmission.domain.item.service.ItemService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
