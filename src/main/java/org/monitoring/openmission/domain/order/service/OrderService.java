@@ -34,4 +34,12 @@ public class OrderService {
 
         return order;
     }
+
+    @Transactional(readOnly = true)
+    public Order getOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(
+                () -> new EntityNotFoundException(orderId + " 에 맞는 주문이 존재하지 않습니다. "));
+
+        return order;
+    }
 }
