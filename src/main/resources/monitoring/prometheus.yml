@@ -1,0 +1,18 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  # 1) Spring Boot 애플리케이션 메트릭 (추후 /actuator/prometheus 노출)
+  - job_name: "spring-boot"
+    metrics_path: "/actuator/prometheus"
+    static_configs:
+      - targets: ["host.docker.internal:8080"]
+        # 맥/윈도우에서 Docker 컨테이너 → 호스트로 접근할 때 host.docker.internal 사용
+        # 스프링 앱 포트가 8080이 아니라면 여기를 바꿔주면 됨.
+
+  # 2) Jaeger 메트릭
+  - job_name: "jaeger"
+    static_configs:
+      - targets: ["jaeger:14269"]
+        # Jaeger all-in-one이 노출하는 메트릭 포트 (버전에 따라 다를 수 있음)
