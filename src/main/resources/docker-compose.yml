@@ -7,8 +7,47 @@ services:
       POSTGRES_DB: open_mission
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "12345"
-    volumes:
-      - open_mission_pg:/var/lib/postgresql/data
+      TZ: Asia/Seoul
+#    volumes:
+#      - open_mission_pg:/var/lib/postgresql/data
     ports: ["5433:5432"]
-volumes:
-  open_mission_pg:
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    container_name: open-mission-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"      # OTLP 수집 활성화
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC (앱 → Jaeger)
+      - "4318:4318"     # OTLP HTTP
+    networks:
+      - monitoring-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: open-mission-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: open-mission-grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring-net
+    depends_on:
+      - prometheus
+    volumes:
+      - ./monitoring/grafana:/var/lib/grafana
+
+networks:
+  monitoring-net:
+    driver: bridge
