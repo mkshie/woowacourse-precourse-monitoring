@@ -21,12 +21,25 @@ management:
   endpoints:
     web:
       exposure:
-        include: "health,info,prometheus"
+        include: "health,info,prometheus,metrics"
   endpoint:
     health:
       show-details: always
+  metrics:
+    tags:
+      application: open-mission-api
+  tracing:
+    sampling:
+      probability: 1.0   # 100% 샘플링
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces    # Jaeger OTLP  엔드포인트
+  aop:
+    proxy-target-class: true
 
 logging:
+  pattern:
+    level: "%5p [traceId=%X{traceId:-}, spanId=%X{spanId:-}]"
   level:
-    org.springframework.boot.context.config: DEBUG
-    org.springframework.core.env: DEBUG
+    io.opentelemetry: WARN
+    io.micrometer.tracing: INFO
