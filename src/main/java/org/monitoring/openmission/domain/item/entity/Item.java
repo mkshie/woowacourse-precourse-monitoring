@@ -11,11 +11,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 import org.monitoring.openmission.global.common.BaseEntity;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -34,4 +36,7 @@ public class Item  extends BaseEntity {
 
     @Column(nullable = false)
     private Integer stock;
+
+    @Column
+    private String tags;
 }

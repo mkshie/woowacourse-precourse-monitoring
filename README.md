@@ -37,3 +37,29 @@
 | Logging        | SLF4J + MDC(traceId)                       | 로그-트레이스 상관관계                        |
 | Build & Deploy | Gradle, Docker Compose                     | 실행 자동화                              |
 
+
+## 구현할 기능 목록
+
+Item 컨트롤러
+-  Item 
+  - 컨트롤러
+    - 생성
+    - 조회
+    - 삭제
+    - 수정
+  - 서비스
+  - DTO
+    - CreateRequest
+    - CreateResponse (공통)
+    - ItemResponse
+-  Order
+  - 컨트롤러
+    - 생성
+    - 조회
+    - 삭제
+    - 수정
+  - 서비스
+  - DTO
+    - CreateRequest
+    - CreateResponse (공통)
+    - OrderResponse
