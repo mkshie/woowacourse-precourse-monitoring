@@ -28,6 +28,11 @@ management:
   metrics:
     tags:
       application: open-mission-api
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true   # http_server_requests_seconds_bucket 메트릭 생성
   tracing:
     sampling:
       probability: 1.0   # 100% 샘플링
