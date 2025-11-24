@@ -1,5 +1,8 @@
 # 📊 Open Mission — Spring Boot + Monitoring
 
+## 노션 정리 url
+https://www.notion.so/2b5f0e538e0b80cd8549cf92dc0b7990
+
 ## 🧭 프로젝트 개요
 > “보이지 않던 시스템의 흐름을 **보이게** 만들어보자.”
 
