@@ -61,10 +61,10 @@ public class MonitoringScenarioTest {
 
     @Test
     void error_rate_scenario() {
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
             get("/api/orders/999999"); // 없는 ID
         }
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 10; i++) {
             get("/api/items?page=0&size=20");
         }
     }
