@@ -103,7 +103,8 @@ Actuator Prometheus endpoint: http://localhost:8080/actuator/prometheus
 
 ### 4) 모니터링 확인
 
-- Grafana 접속 → Prometheus 데이터 소스 사용 → 대시보드 선택  
+- Grafana 접속 → Prometheus 데이터 소스 사용 → 대시보드 선택
+- [open-mission Grafana 대시보드 JSON 보기](src/main/resources/monitoring/open-mission-dashboard.json)
 - Jaeger 접속 → Service에 애플리케이션 이름 선택 → 트레이스 조회
 
 ---
