@@ -183,7 +183,7 @@
               "options": {
                 "mode": "exclude",
                 "names": [
-                  "sum(\n  increase(item_create_duration_seconds_count{success=\"false\"}[5m])\n)"
+                  "item 실패 횟수"
                 ],
                 "prefix": "All except:",
                 "readOnly": true
@@ -227,7 +227,7 @@
         {
           "editorMode": "code",
           "expr": "sum(\n  increase(item_create_duration_seconds_count{success=\"true\"}[5m])\n)",
-          "legendFormat": "__auto",
+          "legendFormat": "item 성공 횟수",
           "range": true,
           "refId": "A"
         },
@@ -240,7 +240,7 @@
           "expr": "sum(\n  increase(item_create_duration_seconds_count{success=\"false\"}[5m])\n)",
           "hide": false,
           "instant": false,
-          "legendFormat": "__auto",
+          "legendFormat": "item 실패 횟수",
           "range": true,
           "refId": "B"
         }
@@ -524,7 +524,7 @@
         {
           "editorMode": "code",
           "expr": "process_cpu_usage",
-          "legendFormat": "__auto",
+          "legendFormat": "cpu 사용량",
           "range": true,
           "refId": "A"
         }
@@ -909,7 +909,7 @@
           "editorMode": "code",
           "exemplar": false,
           "expr": "sum(\n  increase(http_server_requests_seconds_count{uri!~\"/actuator.*\"}[5m])\n)",
-          "legendFormat": "{{RPM}}",
+          "legendFormat": "Reqeust per Minute",
           "range": true,
           "refId": "A"
         }
@@ -932,5 +932,5 @@
   "timezone": "browser",
   "title": "open-mission",
   "uid": "adjhvfd",
-  "version": 17
+  "version": 22
 }
