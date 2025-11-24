@@ -35,3 +35,5 @@ out/
 
 ### VS Code ###
 .vscode/
+### Grafana 데이터 ###
+/src/main/resources/monitoring/grafana/
