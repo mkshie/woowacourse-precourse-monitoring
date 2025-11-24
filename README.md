@@ -45,7 +45,6 @@ Item 컨트롤러
   - 컨트롤러
     - 생성
     - 조회
-    - 삭제
     - 수정
   - 서비스
   - DTO
@@ -56,10 +55,82 @@ Item 컨트롤러
   - 컨트롤러
     - 생성
     - 조회
-    - 삭제
-    - 수정
   - 서비스
   - DTO
     - CreateRequest
     - CreateResponse (공통)
     - OrderResponse
+   
+  ## 🚀 빠른 실행 방법 (Quick Start)
+
+자세한 내용은 [`docs/monitoring-guide.md`](./docs/monitoring-guide.md)를 참고하세요.  
+여기서는 “최소 단계”만 정리합니다.
+
+### 1) 사전 준비
+
+- Docker, Docker Compose 설치
+- JDK 17, Gradle(Wrapper 사용 가능)
+
+### 2) 모니터링 스택(Docker) 기동
+
+프로젝트 루트에서:
+
+```bash
+docker compose up -d
+```
+이 명령으로 Prometheus / Grafana / Jaeger / (PostgreSQL 등) 모니터링 관련 컨테이너가 기동됩니다.
+
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3000
+- Jaeger: http://localhost:16686
+
+> 🔎 Prometheus Status > Targets 메뉴에서 Spring Boot 애플리케이션이 UP 상태인지 꼭 확인합니다.
+
+### 3) Spring Boot 애플리케이션 실행
+
+```bash
+./gradlew bootRun or IDE 에서 직접 실행
+```
+
+기본 포트: http://localhost:8080
+
+OpenAPI/Swagger: http://localhost:8080/swagger-ui/index.html
+
+Actuator Prometheus endpoint: http://localhost:8080/actuator/prometheus
+
+### 4) 모니터링 확인
+
+- Grafana 접속 → Prometheus 데이터 소스 사용 → 대시보드 선택  
+- Jaeger 접속 → Service에 애플리케이션 이름 선택 → 트레이스 조회
+
+---
+
+## 🧪 모니터링 시나리오 테스트
+
+`org.monitoring.openmission.monitoring` 패키지에  
+**운영 시나리오를 재현하기 위한 전용 테스트 코드**를 분리해두었습니다.
+
+### CreateItemScenarioTest
+
+- `item_create_rps_scenario()`  
+  → Item 생성 100건 + 실패 섞인 시나리오
+- `slow_item_trace_scenario()`  
+  → `/monitoring/slow-item`을 여러 번 호출해 Jaeger span 확인
+
+### MonitoringScenarioTest
+
+- `item_create_rps_scenario()`  
+  → Item 생성 RPS 확인용
+- `order_create_slow_scenario()`  
+  → 주문 생성 시 느린 구간이 p95 / Jaeger에 어떻게 보이는지 실험
+- `error_rate_scenario()`  
+  → 일부러 에러를 섞어 HTTP 에러율 패턴 확인
+
+> ⚠️ 이 테스트들은 **이미 8080 포트에 떠 있는 서버**를 대상으로  
+> `TestRestTemplate`로 요청을 보내는 형태입니다.  
+> 실행 전 반드시 `./gradlew bootRun`으로 애플리케이션을 먼저 띄워두어야 합니다.
+
+자세한 실행 단계와,  
+각 시나리오에서 **어떤 패널/트레이스를 보면 좋은지**는  
+[`docs/monitoring-guide.md`](./docs/monitoring-guide.md)에 정리했습니다.
+
