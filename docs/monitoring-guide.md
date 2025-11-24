@@ -77,6 +77,7 @@ docker compose up -d
 - 기본 계정은 도커 이미지 설정에 따르며, 보통 `admin / admin` (처음 로그인 시 비밀번호 변경 요구)입니다.
 - **Data Sources** 메뉴에서 Prometheus가 `http://prometheus:9090` 로 등록되어 있어야 합니다.
 - 대시보드를 Import하거나(resource 파일안에 json 형태로 저장해뒀습니다. open-mission-dashboard.json), 미리 만들어 둔 기술 + 도메인 메트릭 대시보드를 선택하여 사용합니다.
+- [open-mission Grafana 대시보드 JSON 보기](../src/main/resources/monitoring/open-mission-dashboard.json)
 
 관찰할 대표 패널:
 
