@@ -1,0 +1,50 @@
+groups:
+  - name: monitoring-demo
+    interval: 5s
+    rules:
+      - alert: MonitoringDemoHigh5xxRate
+        expr: |
+          (
+            sum(
+              rate(http_server_requests_seconds_count{
+                application="open-mission-api",
+                method="POST",
+                uri="/monitoring/incident",
+                status=~"5.."
+              }[30s])
+            )
+            /
+            clamp_min(
+              sum(
+                rate(http_server_requests_seconds_count{
+                  application="open-mission-api",
+                  method="POST",
+                  uri="/monitoring/incident"
+                }[30s])
+              ),
+              0.001
+            )
+          ) > 0.10
+        for: 15s
+        labels:
+          severity: warning
+          environment: monitoring-demo
+        annotations:
+          summary: Monitoring drill 5xx rate is above 10%
+          description: Current 5xx ratio is {{ $value | humanizePercentage }}.
+
+      - alert: MonitoringDemoHighP95Latency
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le) (
+              rate(monitoring_incident_duration_seconds_bucket[30s])
+            )
+          ) > 1
+        for: 15s
+        labels:
+          severity: warning
+          environment: monitoring-demo
+        annotations:
+          summary: Monitoring drill p95 latency is above 1 second
+          description: Current p95 latency is {{ $value | humanizeDuration }}.

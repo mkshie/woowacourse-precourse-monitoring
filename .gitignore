@@ -37,3 +37,7 @@ out/
 .vscode/
 ### Grafana 데이터 ###
 /src/main/resources/monitoring/grafana/
+
+### 로컬 관측 실험 로그 ###
+/logs/*
+!/logs/.gitkeep

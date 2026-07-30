@@ -1,0 +1,58 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+local.file_match "spring_logs" {
+  path_targets = [{
+    __path__     = "/var/log/open-mission/*.json",
+    service_name = "open-mission",
+    environment  = "monitoring-demo",
+  }]
+  sync_period = "2s"
+}
+
+loki.source.file "spring_logs" {
+  targets       = local.file_match.spring_logs.targets
+  forward_to    = [loki.process.spring_logs.receiver]
+  tail_from_end = true
+}
+
+loki.process "spring_logs" {
+  stage.json {
+    expressions = {
+      level      = "level",
+      trace_id   = "traceId",
+      span_id    = "spanId",
+      event      = "event",
+      endpoint   = "endpoint",
+      mode       = "mode",
+      error_code = "errorCode",
+    }
+  }
+
+  stage.labels {
+    values = {
+      level = "",
+    }
+  }
+
+  stage.structured_metadata {
+    values = {
+      trace_id   = "",
+      span_id    = "",
+      event      = "",
+      endpoint   = "",
+      mode       = "",
+      error_code = "",
+    }
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

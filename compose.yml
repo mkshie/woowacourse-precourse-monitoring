@@ -1,0 +1,144 @@
+name: open-mission
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: open-mission-postgres
+    environment:
+      POSTGRES_DB: open_mission
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "12345"
+      TZ: Asia/Seoul
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d open_mission"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  jaeger:
+    image: cr.jaegertracing.io/jaegertracing/jaeger:2.20.0
+    container_name: open-mission-jaeger
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - monitoring-net
+
+  alertmanager:
+    image: prom/alertmanager:v0.33.1
+    container_name: open-mission-alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    volumes:
+      - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    ports:
+      - "9093:9093"
+    networks:
+      - monitoring-net
+
+  prometheus:
+    image: prom/prometheus:v3.13.1
+    container_name: open-mission-prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/alert-rules.yml:/etc/prometheus/rules/alert-rules.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - alertmanager
+    networks:
+      - monitoring-net
+
+  loki:
+    image: grafana/loki:3.7.0
+    container_name: open-mission-loki
+    command:
+      - "-config.file=/etc/loki/loki.yml"
+    volumes:
+      - ./observability/loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - monitoring-net
+
+  alloy:
+    image: grafana/alloy:v1.18.0
+    container_name: open-mission-alloy
+    command:
+      - "run"
+      - "--server.http.listen-addr=0.0.0.0:12345"
+      - "--storage.path=/var/lib/alloy/data"
+      - "/etc/alloy/config.alloy"
+    volumes:
+      - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./logs:/var/log/open-mission:ro
+      - alloy-data:/var/lib/alloy/data
+    ports:
+      - "12345:12345"
+    depends_on:
+      - loki
+    networks:
+      - monitoring-net
+
+  grafana:
+    image: grafana/grafana:13.1.0
+    container_name: open-mission-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - jaeger
+    networks:
+      - monitoring-net
+
+  k6:
+    image: grafana/k6:1.7.1
+    profiles:
+      - drill
+    environment:
+      BASE_URL: http://host.docker.internal:18080
+    volumes:
+      - ./observability/k6:/scripts:ro
+    command:
+      - "run"
+      - "/scripts/incident-drill.js"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - monitoring-net
+
+networks:
+  monitoring-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  alertmanager-data:
+  prometheus-data:
+  loki-data:
+  alloy-data:
+  grafana-data:
