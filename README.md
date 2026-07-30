@@ -58,7 +58,7 @@ flowchart LR
 | Prometheus rule 상태 | 5xx·p95 두 규칙 모두 `Firing`, 복구 후 `Pending`·`Firing` 0건 |
 | Alertmanager | 같은 두 경보의 active 유입과 복구 후 0건 확인, 외부 전달 미구성 |
 | ERROR 추적 | Loki 오류 로그의 `traceId`로 Jaeger의 오류 요청 3개 span 확인 |
-| SLOW 추적 | `delayMs=1500` 로그와 같은 trace의 downstream child span 1.509초 확인 |
+| SLOW 추적 | `delayMs=1500` 로그와 같은 trace의 downstream child span 1.501초 확인 |
 
 ![장애 주입 구간의 5xx, p95, firing 경보](./docs/images/observability/01-incident-alert-firing-public.png)
 
@@ -120,5 +120,6 @@ Grafana의 `Open Mission / Incident Drill` 대시보드는 provisioning으로 �
 - Jaeger는 로컬 재현성을 위한 all-in-one 메모리 저장소를 사용하므로 장기 보관 구성이 아닙니다.
 - 임계치는 운영 SLO가 아니라 2분 30초 실험에서 상태 전이를 관찰하기 위한 값입니다.
 - `monitoring-demo` 프로필을 사용하지 않으면 장애 주입 API가 노출되지 않습니다.
+- Compose로 실행하는 관측 UI와 DB의 host 포트는 `127.0.0.1`에만 바인딩합니다.
 - 실제 외부 시스템 대신 예외와 `Thread.sleep`으로 downstream 오류·지연을 통제 주입한 단일 인스턴스 실험입니다.
 - 최초 수동 실행에서 얻은 873건은 처리 용량이나 TPS 성과를 의미하지 않습니다.

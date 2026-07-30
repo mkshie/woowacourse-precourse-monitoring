@@ -6,7 +6,11 @@
 
 - Docker와 Docker Compose
 - JDK 17
+- `curl`, `jq`
 - 로컬 포트 `3000`, `3100`, `4317`, `4318`, `5433`, `9090`, `9093`, `12345`, `16686`, `18080`
+
+Compose로 실행하는 관측 스택과 DB의 host 포트는 로컬 실험 범위를 벗어나 노출되지 않도록 `127.0.0.1`에만 바인딩합니다.
+`3000` 포트를 이미 사용 중이면 `GRAFANA_HOST_PORT=3001 docker compose up -d`처럼 Grafana host 포트만 바꿀 수 있습니다.
 
 ## 2. 모니터링 스택 실행
 
@@ -79,8 +83,7 @@ observability/scripts/verify-incident-drill.sh
 
 k6는 요청 자체에 대해 다음을 검증합니다.
 
-- 모든 모드가 기대한 HTTP 상태를 반환하는지
-- 전체 check 성공률이 99%를 넘는지
+- `NORMAL=204`, `ERROR=500`, `SLOW=204` 상태 코드 check가 모두 통과하는지
 - 의도된 500을 포함한 전체 HTTP 실패율이 20% 미만인지
 - SLOW 시나리오 p95가 1초보다 크고 2.5초보다 작은지
 

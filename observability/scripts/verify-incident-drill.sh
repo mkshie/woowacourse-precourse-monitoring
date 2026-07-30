@@ -9,6 +9,7 @@ readonly PROMETHEUS_URL="http://localhost:9090"
 readonly ALERTMANAGER_URL="http://localhost:9093"
 readonly LOKI_URL="http://localhost:3100"
 readonly JAEGER_URL="http://localhost:16686"
+readonly ALLOY_URL="http://localhost:12345"
 readonly APPLICATION_URL="http://localhost:18080"
 
 readonly ALERT_QUERY='ALERTS{alertname=~"MonitoringDemoHigh(5xxRate|P95Latency)"}'
@@ -254,6 +255,8 @@ check_prerequisites() {
     || fail "Alertmanager is not ready at ${ALERTMANAGER_URL}."
   curl -fsS "${LOKI_URL}/ready" >/dev/null \
     || fail "Loki is not ready at ${LOKI_URL}."
+  curl -fsS "${ALLOY_URL}/-/ready" >/dev/null \
+    || fail "Alloy is not ready at ${ALLOY_URL}."
   curl -fsS "${JAEGER_URL}/api/services" >/dev/null \
     || fail "Jaeger query API is not ready at ${JAEGER_URL}."
 

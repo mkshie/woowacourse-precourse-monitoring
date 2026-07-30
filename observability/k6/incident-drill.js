@@ -39,7 +39,7 @@ export const options = {
     },
   },
   thresholds: {
-    checks: ['rate>0.99'],
+    checks: ['rate==1'],
     http_req_failed: ['rate<0.20'],
     'http_req_duration{scenario:injected_latency}': [
       'p(95)>1000',

@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: "12345"
       TZ: Asia/Seoul
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d open_mission"]
       interval: 5s
@@ -23,9 +23,9 @@ services:
     image: cr.jaegertracing.io/jaegertracing/jaeger:2.20.0
     container_name: open-mission-jaeger
     ports:
-      - "16686:16686"
-      - "4317:4317"
-      - "4318:4318"
+      - "127.0.0.1:16686:16686"
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
     networks:
       - monitoring-net
 
@@ -39,7 +39,7 @@ services:
       - ./observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager-data:/alertmanager
     ports:
-      - "9093:9093"
+      - "127.0.0.1:9093:9093"
     networks:
       - monitoring-net
 
@@ -54,7 +54,7 @@ services:
       - ./observability/prometheus/alert-rules.yml:/etc/prometheus/rules/alert-rules.yml:ro
       - prometheus-data:/prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -71,7 +71,7 @@ services:
       - ./observability/loki/loki.yml:/etc/loki/loki.yml:ro
       - loki-data:/loki
     ports:
-      - "3100:3100"
+      - "127.0.0.1:3100:3100"
     networks:
       - monitoring-net
 
@@ -88,7 +88,7 @@ services:
       - ./logs:/var/log/open-mission:ro
       - alloy-data:/var/lib/alloy/data
     ports:
-      - "12345:12345"
+      - "127.0.0.1:12345:12345"
     depends_on:
       - loki
     networks:
@@ -107,7 +107,7 @@ services:
       - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
     ports:
-      - "3000:3000"
+      - "127.0.0.1:${GRAFANA_HOST_PORT:-3000}:3000"
     depends_on:
       - prometheus
       - loki

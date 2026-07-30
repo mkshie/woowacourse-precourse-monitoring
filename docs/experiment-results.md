@@ -73,7 +73,7 @@ Loki에서 `normal`, `error`, `slow` 세 모드의 `monitoring.incident` JSON �
 
 ![동일 traceId에서 확인한 root span과 오류 child span](./images/observability/04-jaeger-error-trace-public.png)
 
-자동 검증 재실행에서는 SLOW 로그의 traceId `770f32c5efd38fce0bfe69f87d1f9796`를 Jaeger에서 조회했습니다. 다음 세 span이 하나의 trace에 있었고 `monitoring.demo.downstream-call`은 1.509초였습니다.
+강화한 검증 조건으로 다시 실행했을 때 SLOW 로그의 traceId `749dd4116455ade6cb524f98a523a80b`를 Jaeger에서 조회했습니다. 다음 세 span이 하나의 trace에 있었고 `monitoring.demo.downstream-call`은 1.501초였습니다.
 
 1. HTTP `POST /monitoring/incident` root span
 2. `monitoring.incident.slow` span
@@ -97,9 +97,9 @@ Loki에서 `normal`, `error`, `slow` 세 모드의 `monitoring.incident` JSON �
 - 복구 후 Prometheus `Pending`·`Firing` 0건, Alertmanager active 0건
 - 이번 실행 이후 Loki ERROR·SLOW 로그에서 각각 `traceId` 추출
 - 두 trace 모두 HTTP root, `monitoring.incident.*`, `monitoring.demo.downstream-call`의 3개 span 확인
-- SLOW downstream child span 1.509초
+- SLOW downstream child span 1.501초
 
-검증 표본은 ERROR traceId `bbfe5070a47b3f2cd8efc2cb9fa35ffd`, SLOW traceId `770f32c5efd38fce0bfe69f87d1f9796`였습니다. traceId 자체가 성과는 아니며, 스크립트가 같은 실행 구간의 로그와 trace를 연결했다는 재현 근거로만 기록했습니다.
+검증 표본은 ERROR traceId `752d0dcedcc048a12d9a9e3f5ead008e`, SLOW traceId `749dd4116455ade6cb524f98a523a80b`였습니다. traceId 자체가 성과는 아니며, 스크립트가 같은 실행 구간의 로그와 trace를 연결했다는 재현 근거로만 기록했습니다.
 
 ## 함께 통과한 검증
 
