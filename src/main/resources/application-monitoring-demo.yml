@@ -1,0 +1,18 @@
+spring:
+  config:
+    activate:
+      on-profile: monitoring-demo
+
+server:
+  port: 18080
+
+logging:
+  file:
+    name: logs/open-mission.json
+  structured:
+    format:
+      file: logstash
+    json:
+      add:
+        service: open-mission
+        environment: monitoring-demo
