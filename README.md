@@ -1,140 +1,125 @@
-# 📊 Open Mission — Spring Boot + Monitoring
+# Open Mission — Observability Incident Drill
 
-## 노션 정리 url
-[https://www.notion.so/2b5f0e538e0b80cd8549cf92dc0b7990](https://melted-platinum-6a8.notion.site/2b5f0e538e0b80cd8549cf92dc0b7990)
+Spring Boot 애플리케이션에 의도적으로 오류와 지연을 주입하고, **메트릭 탐지 → 경보 발생 → 구조화 로그 확인 → 동일 traceId의 트레이스 분석 → 복구 확인**까지 한 흐름으로 재현한 관측 가능성(Observability) 실험입니다.
 
-## 🧭 프로젝트 개요
-> “보이지 않던 시스템의 흐름을 **보이게** 만들어보자.”
+이 프로젝트의 수치는 운영 트래픽 성과가 아니라, 작은 로컬 환경에서 관측 흐름을 반복 검증하기 위한 **통제 장애 훈련 결과**입니다.
 
-이번 우테코 **오픈 미션**의 목표는 “나에게 낯선 도전”을 주제로 내가 직접 해보지 않았던 기술들을 사용하여
-기간내에 프로젝트를 보여주는것 따라서 평소 운영까지 프로젝트를 가지 않아서 모니터링 작업을 경험해본적이 없기 때문에 좋은 경험이라 생각하고
-**운영 관점에서 시스템을 관찰·분석할 수 있는 백엔드 모니터링 환경**을 다양한 모니터링 시스템을 활용하여 직접 구축하는 것으로 정했습니다.
+## 해결하려던 문제
 
-단순히 동작하는 API를 만드는 것에서 그치지 않고,  
-**트레이스(Trace)**·**메트릭(Metrics)**·**로그(Log)** 가 서로 연결되는 구조를 직접 설계하고 구현하는게 목표입니다.
+API가 느려지거나 5xx 오류가 발생했을 때 단일 대시보드만으로는 다음 질문에 답하기 어렵습니다.
 
----
+1. 언제부터 어떤 이상 징후가 발생했는가?
+2. 임계치를 넘은 상태가 실제 경보로 전환됐는가?
+3. 문제 요청의 로그와 실행 경로를 같은 식별자로 연결할 수 있는가?
+4. 정상 트래픽으로 돌아온 뒤 경보가 해제됐는가?
 
-## 🎯 목표
+이를 검증하기 위해 `monitoring-demo` 프로필에서만 활성화되는 전용 API를 만들고, k6로 정상→장애→복구 구간을 재현했습니다.
 
-| 구분 | 구체적 목표 | 측정 기준 |
-|------|--------------|------------|
-| 1 | OpenTelemetry 기반 분산 추적(Trace) 도입 | Jaeger UI에서 Controller → DB까지 스팬 확인 |
-| 2 | Prometheus + Grafana로 메트릭 수집 및 시각화 | p50/p95, RPS, 에러율 실시간 변화 확인 |
-| 3 | 로그와 트레이스를 traceId로 연계 | 로그에서 traceId 검색 → Jaeger 트레이스로 이동 가능 |
-| 4 | DB, 캐시, 외부호출 등 다양한 시나리오 계측 | 캐시 미스→히트, 에러 재현, 지연 트랜잭션 |
-| 5 | “작게 동작하는” 완전한 환경 구축 | `docker compose up` + `./gradlew bootRun`으로 재현 가능 |
+| 모드 | 동작 | 기대 응답 |
+|---|---|---|
+| `NORMAL` | 정상 요청 처리 | 204 |
+| `ERROR` | 통제된 downstream 오류 발생 | 500 |
+| `SLOW` | child span 내부에 1.5초 지연 주입 | 204 |
 
----
+## 관측 흐름
 
-## ⚙️ 기술 스택 (목표치)
+```mermaid
+flowchart LR
+    K["k6<br/>정상 → 장애 → 복구"] --> A["Spring Boot<br/>/monitoring/incident"]
+    A --> P["Prometheus<br/>메트릭·규칙 평가"]
+    P --> M["Alertmanager<br/>Firing 경보 유입 확인"]
+    A --> F["JSON 로그 파일"]
+    F --> L["Alloy → Loki"]
+    A --> J["OTLP → Jaeger"]
+    P --> G["Grafana"]
+    L --> G
+    J --> G
+    L -. "traceId" .-> J
+```
 
-| 영역             | 사용 기술                                      | 목적                                  |
-| -------------- |--------------------------------------------| ----------------------------------- |
-| Language       | Java 17                                    | 메인 백엔드                              |
-| Framework      | Spring Boot 3.5.7                          | REST API / JPA / Cache / Validation |
-| DB             | PostgreSQL (Docker)                        | 데이터 저장 및 재현성                        |
-| ORM            | Spring Data JPA                            | 엔티티 기반 ORM                          |
-| Migration      | Flyway                                     | DB 스키마 버전관리                         |
-| Monitoring     | OpenTelemetry / Jaeger / Prometheus / Grafana | 추적·지표·시각화                           |
-| Logging        | SLF4J + MDC(traceId)                       | 로그-트레이스 상관관계                        |
-| Build & Deploy | Gradle, Docker Compose                     | 실행 자동화                              |
+- Prometheus: HTTP 5xx 비율과 커스텀 지연 히스토그램 수집, 경보 규칙 평가
+- Alertmanager: Prometheus가 전달한 `Firing` 경보의 로컬 route 유입 확인
+- Alloy + Loki: JSON 로그 수집 및 `traceId`를 structured metadata로 저장
+- OpenTelemetry + Jaeger: 요청과 모의 downstream 구간을 span으로 추적
+- Grafana: 메트릭과 로그를 함께 탐색하고 `traceId` 링크로 Jaeger trace에 이동
+- k6: 응답 시간에 종속되지 않는 일정 요청률로 실험 구간 재현
 
+## 실제 검증 결과
 
-## 구현할 기능 목록
+2026-07-29 로컬 Docker 환경에서 전체 시나리오를 수동 확인했고, 2026-07-30에는 검증 스크립트로 같은 흐름을 다시 실행했습니다.
 
-Item 컨트롤러
--  Item 
-  - 컨트롤러
-    - 생성
-    - 조회
-    - 수정
-  - 서비스
-  - DTO
-    - CreateRequest
-    - CreateResponse (공통)
-    - ItemResponse
--  Order
-  - 컨트롤러
-    - 생성
-    - 조회
-  - 서비스
-  - DTO
-    - CreateRequest
-    - CreateResponse (공통)
-    - OrderResponse
-   
-  ## 🚀 빠른 실행 방법 (Quick Start)
+| 검증 항목 | 결과 |
+|---|---|
+| 총 HTTP 요청 / 상태 코드 check | 873건 / 873건 check 통과 |
+| 의도된 500 응답 포함 전체 실패율 | 6.98% (61/873) |
+| k6 SLOW 요청 p95 | 1.50초 |
+| Prometheus 관측 최대 5xx 비율 | 약 14.29% |
+| Prometheus incident 전체 timer 최대 p95 | 약 1.66초 |
+| Prometheus rule 상태 | 5xx·p95 두 규칙 모두 `Firing`, 복구 후 `Pending`·`Firing` 0건 |
+| Alertmanager | 같은 두 경보의 active 유입과 복구 후 0건 확인, 외부 전달 미구성 |
+| ERROR 추적 | Loki 오류 로그의 `traceId`로 Jaeger의 오류 요청 3개 span 확인 |
+| SLOW 추적 | `delayMs=1500` 로그와 같은 trace의 downstream child span 1.501초 확인 |
 
-자세한 내용은 [`docs/monitoring-guide.md`](./docs/monitoring-guide.md)를 참고하세요.  
-여기서는 “최소 단계”만 정리합니다.
+![장애 주입 구간의 5xx, p95, firing 경보](./docs/images/observability/01-incident-alert-firing-public.png)
 
-### 1) 사전 준비
+![SLOW 요청의 3개 span과 약 1.5초 downstream 구간](./docs/images/observability/06-jaeger-slow-trace-public.png)
 
-- Docker, Docker Compose 설치
-- JDK 17, Gradle(Wrapper 사용 가능)
+수치의 조건과 확인 방법은 [`docs/experiment-results.md`](./docs/experiment-results.md)에 기록했습니다.
 
-### 2) 모니터링 스택(Docker) 기동
+## 빠른 실행
 
-프로젝트 루트에서:
+### 1. 모니터링 스택 실행
 
 ```bash
 docker compose up -d
 ```
-이 명령으로 Prometheus / Grafana / Jaeger / (PostgreSQL 등) 모니터링 관련 컨테이너가 기동됩니다.
 
-- Prometheus: http://localhost:9090
-- Grafana: http://localhost:3000
-- Jaeger: http://localhost:16686
-
-> 🔎 Prometheus Status > Targets 메뉴에서 Spring Boot 애플리케이션이 UP 상태인지 꼭 확인합니다.
-
-### 3) Spring Boot 애플리케이션 실행
+### 2. 애플리케이션 실행
 
 ```bash
-./gradlew bootRun or IDE 에서 직접 실행
+./gradlew bootRun --args='--spring.profiles.active=monitoring-demo'
 ```
 
-기본 포트: http://localhost:8080
+모니터링 실험 프로필은 기존 8080 포트와 충돌하지 않도록 `18080`을 사용합니다.
 
-OpenAPI/Swagger: http://localhost:8080/swagger-ui/index.html
+### 3. 준비 상태 확인
 
-Actuator Prometheus endpoint: http://localhost:8080/actuator/prometheus
+```bash
+curl -fsS http://localhost:18080/actuator/health
+curl -fsS http://localhost:9090/-/ready
+curl -fsS http://localhost:9093/-/ready
+curl -fsS http://localhost:3100/ready
+curl -fsS http://localhost:12345/-/ready
+```
 
-### 4) 모니터링 확인
+### 4. 장애 훈련과 관측 신호 자동 검증
 
-- Grafana 접속 → Prometheus 데이터 소스 사용 → 대시보드 선택
-- [open-mission Grafana 대시보드 JSON 보기](src/main/resources/monitoring/open-mission-dashboard.json)
-- Jaeger 접속 → Service에 애플리케이션 이름 선택 → 트레이스 조회
+```bash
+observability/scripts/verify-incident-drill.sh
+```
 
----
+스크립트는 k6를 실행하면서 Prometheus rule 상태, Alertmanager 유입, Loki 로그의 `traceId`, Jaeger span, 복구 후 활성 경보 0건을 함께 판정합니다.
 
-## 🧪 모니터링 시나리오 테스트
+### 5. 관찰 화면
 
-`org.monitoring.openmission.monitoring` 패키지에  
-**운영 시나리오를 재현하기 위한 전용 테스트 코드**를 분리해두었습니다.
+- Grafana: <http://localhost:3000> (`admin` / `admin`)
+- Prometheus: <http://localhost:9090>
+- Alertmanager: <http://localhost:9093>
+- Jaeger: <http://localhost:16686>
 
-### CreateItemScenarioTest
+Grafana의 `Open Mission / Incident Drill` 대시보드는 provisioning으로 자동 등록됩니다.
 
-- `item_create_rps_scenario()`  
-  → Item 생성 100건 + 실패 섞인 시나리오
-- `slow_item_trace_scenario()`  
-  → `/monitoring/slow-item`을 여러 번 호출해 Jaeger span 확인
+## 문서
 
-### MonitoringScenarioTest
+- [실행 및 관찰 가이드](./docs/monitoring-guide.md)
+- [실험 조건과 실제 결과](./docs/experiment-results.md)
 
-- `item_create_rps_scenario()`  
-  → Item 생성 RPS 확인용
-- `order_create_slow_scenario()`  
-  → 주문 생성 시 느린 구간이 p95 / Jaeger에 어떻게 보이는지 실험
-- `error_rate_scenario()`  
-  → 일부러 에러를 섞어 HTTP 에러율 패턴 확인
+## 로컬 실험의 범위
 
-> ⚠️ 이 테스트들은 **이미 8080 포트에 떠 있는 서버**를 대상으로  
-> `TestRestTemplate`로 요청을 보내는 형태입니다.  
-> 실행 전 반드시 `./gradlew bootRun`으로 애플리케이션을 먼저 띄워두어야 합니다.
-
-자세한 실행 단계와,  
-각 시나리오에서 **어떤 패널/트레이스를 보면 좋은지**는  
-[`docs/monitoring-guide.md`](./docs/monitoring-guide.md)에 정리했습니다.
-
+- `Pending`·`Firing`·`Inactive`는 Prometheus가 평가합니다. Alertmanager는 `Firing` 경보의 로컬 유입까지만 확인했으며 Slack·이메일 같은 외부 수신자는 연결하지 않았습니다.
+- Jaeger는 로컬 재현성을 위한 all-in-one 메모리 저장소를 사용하므로 장기 보관 구성이 아닙니다.
+- 임계치는 운영 SLO가 아니라 2분 30초 실험에서 상태 전이를 관찰하기 위한 값입니다.
+- `monitoring-demo` 프로필을 사용하지 않으면 장애 주입 API가 노출되지 않습니다.
+- Compose로 실행하는 관측 UI와 DB의 host 포트는 `127.0.0.1`에만 바인딩합니다.
+- 실제 외부 시스템 대신 예외와 `Thread.sleep`으로 downstream 오류·지연을 통제 주입한 단일 인스턴스 실험입니다.
+- 최초 수동 실행에서 얻은 873건은 처리 용량이나 TPS 성과를 의미하지 않습니다.

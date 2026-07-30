@@ -15,16 +15,16 @@
       }
     ]
   },
-  "editable": true,
+  "editable": false,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
+  "id": null,
   "links": [],
   "panels": [
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "af4ytcceeq1hcf"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -119,7 +119,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "af4ytcceeq1hcf"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -234,7 +234,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "af4ytcceeq1hcf"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "expr": "sum(\n  increase(item_create_duration_seconds_count{success=\"false\"}[5m])\n)",
@@ -251,7 +251,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "af4ytcceeq1hcf"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -345,7 +345,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "af4ytcceeq1hcf"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -434,13 +434,13 @@
           "refId": "A"
         }
       ],
-      "title": "1 - (5xx 요청 수 / 전체 요청 수)",
+      "title": "HTTP Success Rate (5m)",
       "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "af4ytcceeq1hcf"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -535,7 +535,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "af4ytcceeq1hcf"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -630,7 +630,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "af4ytcceeq1hcf"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -725,7 +725,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "af4ytcceeq1hcf"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
@@ -820,7 +820,7 @@
     {
       "datasource": {
         "type": "prometheus",
-        "uid": "af4ytcceeq1hcf"
+        "uid": "prometheus"
       },
       "description": "분당 요청수",
       "fieldConfig": {
@@ -904,7 +904,7 @@
         {
           "datasource": {
             "type": "prometheus",
-            "uid": "af4ytcceeq1hcf"
+            "uid": "prometheus"
           },
           "editorMode": "code",
           "exemplar": false,
